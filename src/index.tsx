@@ -1,5 +1,13 @@
 import React, { useState, useMemo } from "react";
-import { Renderer, View, Text, Window, LineEdit } from "@nodegui/react-nodegui";
+import {
+  Renderer,
+  View,
+  Text,
+  Button,
+  Window,
+  LineEdit,
+  useEventHandler
+} from "@nodegui/react-nodegui";
 import {
   QPushButtonEvents,
   QLineEditEvents,
@@ -7,11 +15,18 @@ import {
   QKeyEvent
 } from "@nodegui/nodegui";
 
+type Note = {
+  id: number;
+  createdAt: Date;
+  text: string;
+};
+
+const fixedSize = { width: 500, height: 500 };
 const App = () => {
+  const [theme, setTheme] = useState(darkTheme);
   const [newNote, setNewNote] = useState("");
-  const [notes, setNotes] = useState([
-    { id: 1, createdAt: new Date(), text: "This is a note" }
-  ]);
+  const [notes, setNotes] = useState<Note[]>([]);
+
   const lineEditHandler = useMemo(
     () => ({
       [QLineEditEvents.textChanged]: (text: string) => {
@@ -25,8 +40,8 @@ const App = () => {
     }),
     [newNote]
   );
-  const buttonHandler = useMemo(
-    () => ({
+  const buttonHandler = useEventHandler(
+    {
       [QPushButtonEvents.clicked]: () => {
         setNotes([
           ...notes,
@@ -34,18 +49,35 @@ const App = () => {
         ]);
         setNewNote("");
       }
-    }),
+    },
     [notes, newNote]
   );
 
+  const deleteHandler = useEventHandler(
+    {
+      [QPushButtonEvents.clicked]: (e: NativeEvent) => {
+        console.log(e);
+      }
+    },
+    []
+  );
+
   return (
-    <Window minSize={fixedSize} maxSize={fixedSize} styleSheet={styleSheet}>
+    <Window
+      minSize={fixedSize}
+      maxSize={fixedSize}
+      styleSheet={styleSheet(theme)}
+    >
       <View id="container">
         <View id="note_list">
           <Text id="heading">Notes</Text>
+
           {notes.map(note => (
             <View id="note" key={note.id}>
-              <Text id="content_small">{note.createdAt.toDateString()}</Text>
+              <View>
+                <Text id="content_small">{note.createdAt.toDateString()}</Text>
+                <Button id="button_delete" text="🗑" on={deleteHandler} />
+              </View>
               <Text id="content">{note.text}</Text>
             </View>
           ))}
@@ -57,21 +89,26 @@ const App = () => {
             id="create_notes_input"
             placeholderText="Remember me to.."
           />
-          <Button id="create_notes_button" text="Add" on={buttonHandler}>
-            Add
-          </Button>
+          <Button id="create_notes_button" text="Add" on={buttonHandler} />
         </View>
       </View>
     </Window>
   );
 };
 
-const theme = {
+const darkTheme = {
   bg: "#111111",
+  buttonbg: "#222",
   text: "white"
 };
 
-const styleSheet = `
+interface Theme {
+  bg: string;
+  buttonbg: string;
+  text: string;
+}
+
+const styleSheet = (theme: Theme) => `
   #container {
     flex: 1;
     min-height: 0;
@@ -91,9 +128,19 @@ const styleSheet = `
     font-weight: bold;
     color: ${theme.text};
   }
+  
+  #button_delete {
+    background-color: ${theme.bg};
+    border: 1px solid #aaa;
+    width: 50px;
+    margin-left: 10px;
+    border-radius: 5px;
+  }
+  
   #content {
     font-size: 16px;
     color: ${theme.text};
+    min-width: 480px;
   }
   #content_small {
     font-size: 12px;
@@ -106,10 +153,14 @@ const styleSheet = `
     align-items: 'flex-start';
     justify-content: 'flex-start';
     padding: '5px';
-    overflow: scroll;
   }
   #note {
     margin-vertical: 12px;
+    margin-left: 5px;
+  }
+  #note > QWidget {
+    justify-content: space-between;
+    flex-direction: row;
   }
   #create_notes {
     width: '100%';
