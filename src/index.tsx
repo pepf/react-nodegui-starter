@@ -14,18 +14,13 @@ import {
   NativeEvent,
   QKeyEvent
 } from "@nodegui/nodegui";
-
-type Note = {
-  id: number;
-  createdAt: Date;
-  text: string;
-};
+import Note, { NoteType } from "./Note";
 
 const fixedSize = { width: 500, height: 500 };
 const App = () => {
   const [theme, setTheme] = useState(darkTheme);
   const [newNote, setNewNote] = useState("");
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<NoteType[]>([]);
 
   const lineEditHandler = useMemo(
     () => ({
@@ -45,7 +40,11 @@ const App = () => {
       [QPushButtonEvents.clicked]: () => {
         setNotes([
           ...notes,
-          { id: Math.random(), createdAt: new Date(), text: newNote }
+          {
+            id: Math.floor(Math.random() * 10000),
+            createdAt: new Date(),
+            text: newNote
+          }
         ]);
         setNewNote("");
       }
@@ -53,14 +52,12 @@ const App = () => {
     [notes, newNote]
   );
 
-  const deleteHandler = useEventHandler(
-    {
-      [QPushButtonEvents.clicked]: (e: NativeEvent) => {
-        console.log(e);
-      }
-    },
-    []
-  );
+  const removeNote = (id: number) => {
+    console.log(notes.length);
+    const filteredNotes = notes.filter(note => note.id !== id);
+    console.log(filteredNotes.length);
+    setNotes(filteredNotes);
+  };
 
   return (
     <Window
@@ -70,16 +67,10 @@ const App = () => {
     >
       <View id="container">
         <View id="note_list">
-          <Text id="heading">Notes</Text>
+          <Text id="heading">{`Notes (${notes.length})`}</Text>
 
           {notes.map(note => (
-            <View id="note" key={note.id}>
-              <View>
-                <Text id="content_small">{note.createdAt.toDateString()}</Text>
-                <Button id="button_delete" text="🗑" on={deleteHandler} />
-              </View>
-              <Text id="content">{note.text}</Text>
-            </View>
+            <Note key={note.id} onRemove={removeNote} note={note} />
           ))}
         </View>
         <View id="create_notes">
