@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, Reducer, useReducer } from "react";
 import {
   Renderer,
   View,
@@ -17,10 +17,46 @@ import {
 import Note, { NoteType } from "./Note";
 
 const fixedSize = { width: 500, height: 500 };
+
+interface state {
+  notes: NoteType[];
+}
+interface action {
+  type: "create" | "remove";
+  value: string;
+}
+
+const reducer: Reducer<state, action> = (state, action) => {
+  const newState = { ...state };
+  switch (action.type) {
+    case "create": {
+      newState.notes = [
+        ...state.notes,
+        {
+          id: Math.floor(Math.random() * 10000),
+          createdAt: new Date(),
+          text: action.value
+        }
+      ];
+      break;
+    }
+    case "remove": {
+      console.log(state.notes.map(n => n.text));
+      const filteredNotes = state.notes.filter(
+        note => note.id.toString() !== action.value
+      );
+      console.log(filteredNotes.map(n => n.text));
+      newState.notes = filteredNotes;
+      break;
+    }
+  }
+  return newState;
+};
+
 const App = () => {
   const [theme, setTheme] = useState(darkTheme);
   const [newNote, setNewNote] = useState("");
-  const [notes, setNotes] = useState<NoteType[]>([]);
+  const [state, dispatch] = useReducer(reducer, { notes: [] });
 
   const lineEditHandler = useMemo(
     () => ({
@@ -38,25 +74,15 @@ const App = () => {
   const buttonHandler = useEventHandler(
     {
       [QPushButtonEvents.clicked]: () => {
-        setNotes([
-          ...notes,
-          {
-            id: Math.floor(Math.random() * 10000),
-            createdAt: new Date(),
-            text: newNote
-          }
-        ]);
+        dispatch({ type: "create", value: newNote });
         setNewNote("");
       }
     },
-    [notes, newNote]
+    [state.notes, newNote]
   );
 
-  const removeNote = (id: number) => {
-    console.log(notes.length);
-    const filteredNotes = notes.filter(note => note.id !== id);
-    console.log(filteredNotes.length);
-    setNotes(filteredNotes);
+  const removeNote = (id: number) => () => {
+    dispatch({ type: "remove", value: id.toString() });
   };
 
   return (
@@ -67,9 +93,8 @@ const App = () => {
     >
       <View id="container">
         <View id="note_list">
-          <Text id="heading">{`Notes (${notes.length})`}</Text>
-
-          {notes.map(note => (
+          <Text id="heading">{`Notes (${state.notes.length})`}</Text>
+          {state.notes.map(note => (
             <Note key={note.id} onRemove={removeNote} note={note} />
           ))}
         </View>
