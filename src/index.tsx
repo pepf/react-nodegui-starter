@@ -41,11 +41,9 @@ const reducer: Reducer<state, action> = (state, action) => {
       break;
     }
     case "remove": {
-      console.log(state.notes.map(n => n.text));
       const filteredNotes = state.notes.filter(
         note => note.id.toString() !== action.value
       );
-      console.log(filteredNotes.map(n => n.text));
       newState.notes = filteredNotes;
       break;
     }
@@ -105,7 +103,7 @@ const App = () => {
             id="create_notes_input"
             placeholderText="Remember me to.."
           />
-          <Button id="create_notes_button" text="Add" on={buttonHandler} />
+          <Button flat id="create_notes_button" text="Add" on={buttonHandler} />
         </View>
       </View>
     </Window>
@@ -193,7 +191,7 @@ const styleSheet = (theme: Theme) => `
   }
   #create_notes_button {
     color: ${theme.text};
-    background-color: ${theme.bg};
+    background-color: #333333;
   }
 
   #result {
