@@ -6,7 +6,8 @@ import {
   Button,
   Window,
   LineEdit,
-  useEventHandler
+  useEventHandler,
+  ScrollArea
 } from "@nodegui/react-nodegui";
 import {
   QPushButtonEvents,
@@ -54,7 +55,9 @@ const reducer: Reducer<state, action> = (state, action) => {
 const App = () => {
   const [theme, setTheme] = useState(darkTheme);
   const [newNote, setNewNote] = useState("");
-  const [state, dispatch] = useReducer(reducer, { notes: [] });
+  const [state, dispatch] = useReducer(reducer, {
+    notes: []
+  });
 
   const lineEditHandler = useMemo(
     () => ({
@@ -91,10 +94,16 @@ const App = () => {
     >
       <View id="container">
         <View id="note_list">
-          <Text id="heading">{`Notes (${state.notes.length})`}</Text>
-          {state.notes.map(note => (
-            <Note key={note.id} onRemove={removeNote} note={note} />
-          ))}
+          <Text id="heading">{`📝 Notes`}</Text>
+          <ScrollArea
+            style={`height: '100%';width: '100%'; border:'0px solid white';`}
+          >
+            <View id="notes_container">
+              {state.notes.map(note => (
+                <Note key={note.id} onRemove={removeNote} note={note} />
+              ))}
+            </View>
+          </ScrollArea>
         </View>
         <View id="create_notes">
           <LineEdit
@@ -127,8 +136,6 @@ const styleSheet = (theme: Theme) => `
     flex: 1;
     min-height: 0;
     min-width: 0;
-    width: '900';
-    height: '900';
     flex-direction: column;
     min-height: '100%';
     width: '100%';
@@ -138,13 +145,13 @@ const styleSheet = (theme: Theme) => `
   }
   #heading {
     font-size: 32px;
+    margin-top: 8px;
     margin-bottom: 16px;
     font-weight: bold;
     color: ${theme.text};
   }
   
   #button_delete {
-    background-color: ${theme.bg};
     border: 1px solid #aaa;
     width: 50px;
     margin-left: 10px;
@@ -167,6 +174,19 @@ const styleSheet = (theme: Theme) => `
     align-items: 'flex-start';
     justify-content: 'flex-start';
     padding: '5px';
+    width: '100%';
+  }
+  #notes_container {
+    flex: 1;
+    flex-grow: 1;
+    flex-direction: column;
+    align-items: 'flex-start';
+    justify-content: 'flex-start';
+    min-height: 0;
+    min-width: 0;
+    width: '500';
+    height: '3000';
+    background-color: ${theme.bg};
   }
   #note {
     margin-vertical: 12px;
@@ -178,7 +198,7 @@ const styleSheet = (theme: Theme) => `
   }
   #create_notes {
     width: '100%';
-    max-height: '40px';
+    max-height: '60px';
     padding: 5px;
     border-top: 1px solid white;
     flex: 1;
@@ -190,8 +210,10 @@ const styleSheet = (theme: Theme) => `
     flex: 1;
   }
   #create_notes_button {
+    border-radius: 5px;
     color: ${theme.text};
-    background-color: #333333;
+    background-color: ${theme.buttonbg};
+    min-width: '100px';
   }
 
   #result {
